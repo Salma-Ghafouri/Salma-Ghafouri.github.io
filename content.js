@@ -43,7 +43,8 @@ const resumeData = {
             "LabVIEW",
             "CATIA",
             "SOLIDWORKS",
-            "AVR & ARM Microcontrollers",
+            "AVR Microcontrollers",
+            "ARM",
             "Raspberry Pi", 
             "Arduino"
         ]
@@ -132,7 +133,7 @@ const resumeData = {
     // Social Media Links
     socialLinks: {
         linkedin: "#",
-        github: "#",
+        github: "https://github.com/Salma-Ghafouri",
         instagram: "#",
         researchgate: "#",
         orcid: "#",
