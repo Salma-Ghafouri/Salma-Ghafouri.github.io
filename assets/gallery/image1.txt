@@ -1,0 +1,3 @@
+Project Title
+This is a detailed description of the project. You can write multiple lines here and they will all be displayed when hovering over the image thumbnail.
+
