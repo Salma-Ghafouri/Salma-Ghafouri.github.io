@@ -118,13 +118,24 @@
     <section id="gallery" class="gallery">
         <div class="container">
             <h2 class="section-title">Gallery</h2>
+            <div class="gallery-filters" role="tablist" aria-label="Gallery categories">
+                <button class="gallery-filter-btn active" type="button" data-gallery-category="general" role="tab" aria-selected="true">
+                    Gallery
+                </button>
+                <button class="gallery-filter-btn" type="button" data-gallery-category="certificates" role="tab" aria-selected="false">
+                    Certificates
+                </button>
+                <button class="gallery-filter-btn" type="button" data-gallery-category="projects" role="tab" aria-selected="false">
+                    Projects
+                </button>
+            </div>
             <div class="gallery-slider-container">
                 <div class="gallery-slider-wrapper">
                     <button class="slider-btn slider-btn-prev" aria-label="Previous image">‹</button>
                     <div class="gallery-slider" id="gallerySlider">
                         <!-- Images will be loaded dynamically by JavaScript -->
                         <div class="gallery-empty-message">
-                            <p>No images found. Please add images to the <code>assets/gallery/</code> folder.</p>
+                            <p>No images found. Please add images to <code>assets/gallery/</code>, <code>assets/certificates/</code>, or <code>assets/projects/</code>.</p>
                         </div>
                     </div>
                     <button class="slider-btn slider-btn-next" aria-label="Next image">›</button>

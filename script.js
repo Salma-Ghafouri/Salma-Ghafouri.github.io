@@ -159,17 +159,36 @@ if (scrollToTopBtn) {
 
 // Gallery Slider
 // ============================================
-// Add your image filenames here (they should be in assets/gallery/ folder)
-// Example: ['image1.jpg', 'image2.png', 'photo1.jpg']
-const galleryImages = [
-    // Add your image filenames here
-    // Example: 'image1.jpg', 'image2.png', 'photo1.jpg'
-];
-
-// Auto-detect images by trying common names (optional)
-// This will try image1.jpg, image2.jpg, etc. up to 20 images
-const autoDetectImages = true;
-const maxAutoDetect = 20;
+// Gallery categories (folders are separated so users can choose what to view)
+// Put images under:
+// - assets/gallery/
+// - assets/certificates/
+// - assets/projects/
+//
+// Optional: you can provide manual lists per category (filenames only). If empty, auto-detect is used.
+const galleryCategories = {
+    general: {
+        label: 'Gallery',
+        folder: 'assets/gallery/',
+        images: [],
+        autoDetect: true,
+        maxAutoDetect: 20
+    },
+    certificates: {
+        label: 'Certificates',
+        folder: 'assets/certificates/',
+        images: [],
+        autoDetect: true,
+        maxAutoDetect: 20
+    },
+    projects: {
+        label: 'Projects',
+        folder: 'assets/projects/',
+        images: [],
+        autoDetect: true,
+        maxAutoDetect: 20
+    }
+};
 
 // Gallery Slider Functionality
 let currentSlideIndex = 0;
@@ -177,6 +196,7 @@ let images = [];
 let imageData = []; // Store title and description for each image
 let autoSlideInterval = null;
 const autoSlideDelay = 5000; // 5 seconds
+let currentGalleryCategory = 'general';
 
 // Function to check if image exists
 function checkImageExists(src) {
@@ -219,68 +239,98 @@ function getImageNameWithoutExt(imagePath) {
     return fileName.replace(/\.[^/.]+$/, '');
 }
 
-// Function to load gallery images
-async function loadGalleryImages() {
-    const galleryPath = 'assets/gallery/';
-    images = [];
-    imageData = [];
+function setGalleryEmptyMessage(categoryKey, folderUsed) {
+    const slider = document.getElementById('gallerySlider');
+    const thumbs = document.getElementById('galleryThumbnails');
+    const currentImageSpan = document.getElementById('currentImage');
+    const totalImagesSpan = document.getElementById('totalImages');
+
+    if (slider) {
+        const category = galleryCategories[categoryKey];
+        const label = category?.label || 'Gallery';
+        const folder = folderUsed || category?.folder || 'assets/gallery/';
+        slider.innerHTML = `<div class="gallery-empty-message"><p>No images found in <code>${folder}</code> for <strong>${label}</strong>.</p></div>`;
+    }
+    if (thumbs) thumbs.innerHTML = '';
+    if (currentImageSpan) currentImageSpan.textContent = '0';
+    if (totalImagesSpan) totalImagesSpan.textContent = '0';
+}
+
+async function loadImagesFromFolder(folder, categoryConfig) {
+    const categoryImages = [];
+    const categoryImageData = [];
+
+    const manualList = Array.isArray(categoryConfig?.images) ? categoryConfig.images : [];
+    const shouldAutoDetect = Boolean(categoryConfig?.autoDetect);
+    const maxDetect = Number.isFinite(categoryConfig?.maxAutoDetect) ? categoryConfig.maxAutoDetect : 20;
 
     // If manual list is provided, use it
-    if (galleryImages.length > 0) {
-        for (const imageName of galleryImages) {
-            const imagePath = galleryPath + imageName;
+    if (manualList.length > 0) {
+        for (const imageName of manualList) {
+            const imagePath = folder + imageName;
             const exists = await checkImageExists(imagePath);
             if (exists) {
-                images.push(imagePath);
-                
-                // Try to load corresponding txt file
+                categoryImages.push(imagePath);
                 const imageNameWithoutExt = getImageNameWithoutExt(imagePath);
-                const txtPath = `${galleryPath}${imageNameWithoutExt}.txt`;
+                const txtPath = `${folder}${imageNameWithoutExt}.txt`;
                 const txtContent = await loadTextFile(txtPath);
-                const data = parseImageData(txtContent);
-                imageData.push(data);
+                categoryImageData.push(parseImageData(txtContent));
             }
         }
-    } else if (autoDetectImages) {
-        // Auto-detect images
+        return { images: categoryImages, imageData: categoryImageData };
+    }
+
+    // Auto-detect images (image1.jpg, image2.png, ...)
+    if (shouldAutoDetect) {
         const extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        for (let i = 1; i <= maxAutoDetect; i++) {
+        for (let i = 1; i <= maxDetect; i++) {
             for (const ext of extensions) {
-                const imagePath = `${galleryPath}image${i}.${ext}`;
+                const imagePath = `${folder}image${i}.${ext}`;
                 const exists = await checkImageExists(imagePath);
                 if (exists) {
-                    images.push(imagePath);
-                    
-                    // Try to load corresponding txt file
-                    const txtPath = `${galleryPath}image${i}.txt`;
+                    categoryImages.push(imagePath);
+                    const txtPath = `${folder}image${i}.txt`;
                     const txtContent = await loadTextFile(txtPath);
-                    const data = parseImageData(txtContent);
-                    imageData.push(data);
-                    
+                    categoryImageData.push(parseImageData(txtContent));
                     break; // Found one, move to next number
                 }
             }
         }
     }
 
-    if (images.length === 0) {
-        // Show empty message
-        const slider = document.getElementById('gallerySlider');
-        if (slider) {
-            slider.innerHTML = '<div class="gallery-empty-message"><p>No images found. Please add images to the <code>assets/gallery/</code> folder.</p></div>';
-        }
+    return { images: categoryImages, imageData: categoryImageData };
+}
+
+// Function to load gallery images (for a specific category)
+async function loadGalleryImages(categoryKey = currentGalleryCategory) {
+    const category = galleryCategories[categoryKey];
+    if (!category) {
+        setGalleryEmptyMessage(categoryKey, 'assets/gallery/');
         return;
     }
 
-    // Create slides
+    images = [];
+    imageData = [];
+    currentSlideIndex = 0;
+    stopAutoSlide();
+
+    // Try primary folder first
+    const primaryFolder = category.folder;
+    const primary = await loadImagesFromFolder(primaryFolder, category);
+
+    let usedFolder = primaryFolder;
+    images = primary.images;
+    imageData = primary.imageData;
+
+    if (images.length === 0) {
+        setGalleryEmptyMessage(categoryKey, usedFolder);
+        return;
+    }
+
     createGallerySlides();
-    // Create thumbnails
     createGalleryThumbnails();
-    // Update counter
     updateGalleryCounter();
-    // Show first slide
     showSlide(0);
-    // Start auto slide
     startAutoSlide();
 }
 
@@ -479,7 +529,29 @@ function prevSlide() {
 
 // Initialize gallery when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    loadGalleryImages();
+    // Gallery category filters
+    const filterButtons = document.querySelectorAll('.gallery-filter-btn[data-gallery-category]');
+    if (filterButtons.length > 0) {
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const categoryKey = btn.getAttribute('data-gallery-category');
+                if (!categoryKey || !galleryCategories[categoryKey]) return;
+
+                currentGalleryCategory = categoryKey;
+
+                // Update active button UI + aria
+                filterButtons.forEach(b => {
+                    const isActive = b === btn;
+                    b.classList.toggle('active', isActive);
+                    b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                });
+
+                loadGalleryImages(currentGalleryCategory);
+            });
+        });
+    }
+
+    loadGalleryImages(currentGalleryCategory);
 
     // Add event listeners to navigation buttons
     const prevBtn = document.querySelector('.slider-btn-prev');
@@ -537,4 +609,5 @@ document.addEventListener('DOMContentLoaded', () => {
     //     sliderWrapper.addEventListener('mouseleave', startAutoPlay);
     // }
 });
+
 

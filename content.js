@@ -33,22 +33,35 @@ const resumeData = {
         ]
     },
 
-    // Skills Section
-    skills: {
-        title: "Technical Skills",
-        items: [
-            "Python",
-            "MATLAB & Simulink",
-            "C++",
-            "LabVIEW",
-            "CATIA",
-            "SOLIDWORKS",
-            "AVR Microcontrollers",
-            "ARM",
-            "Raspberry Pi", 
-            "Arduino"
-        ]
-    },
+    // Skills Section (Flexible)
+    // Add as many groups as you want (e.g., Technical Skills, Soft Skills, Languages, etc.)
+    // If you leave this empty, the Skills block will NOT be shown on the website.
+    skillsGroups: [
+        {
+            title: "Technical Skills",
+            items: [
+                "Python",
+                "MATLAB & Simulink",
+                "C++",
+                "LabVIEW",
+                "CATIA",
+                "SOLIDWORKS",
+                "AVR Microcontrollers",
+                "ARM",
+                "Raspberry Pi",
+                "Arduino"
+            ]
+        }
+        // Example:
+        // ,
+        // {
+        //     title: "Soft Skills",
+        //     items: ["Teamwork", "Communication", "Problem Solving"]
+        // }
+    ],
+
+    // Backward compatible (optional): you can delete this block if you only use skillsGroups.
+    // skills: { title: "Technical Skills", items: ["Python", "MATLAB"] },
 
     // Education
     education: [

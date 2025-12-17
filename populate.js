@@ -70,18 +70,48 @@ function populateBio() {
 
 // Populate Skills Section
 function populateSkills() {
-    const skillsContainer = document.querySelector('.skills-tags');
-    
-    if (skillsContainer && resumeData.skills && resumeData.skills.items) {
-        skillsContainer.innerHTML = resumeData.skills.items
-            .map(skill => `<span class="skill-tag">${skill}</span>`)
-            .join('');
+    const skillsSection = document.querySelector('.skills');
+    if (!skillsSection) return;
+
+    // New flexible format:
+    // resumeData.skillsGroups = [{ title: "Technical Skills", items: ["Python", ...] }, ...]
+    // Backward compatible with:
+    // resumeData.skills = { title: "Technical Skills", items: [...] }
+    const rawGroups = Array.isArray(resumeData?.skillsGroups) ? resumeData.skillsGroups : [];
+    const legacy = resumeData?.skills;
+
+    const normalizedGroups = [];
+
+    for (const g of rawGroups) {
+        const title = (typeof g?.title === 'string') ? g.title.trim() : '';
+        const items = Array.isArray(g?.items) ? g.items.map(s => (typeof s === 'string' ? s.trim() : '')).filter(Boolean) : [];
+        if (title || items.length > 0) normalizedGroups.push({ title, items });
     }
 
-    const skillsTitle = document.querySelector('.skills h3');
-    if (skillsTitle && resumeData.skills && resumeData.skills.title) {
-        skillsTitle.textContent = resumeData.skills.title;
+    // If no groups provided, fall back to legacy `skills`
+    if (normalizedGroups.length === 0 && legacy) {
+        const title = (typeof legacy?.title === 'string') ? legacy.title.trim() : '';
+        const items = Array.isArray(legacy?.items) ? legacy.items.map(s => (typeof s === 'string' ? s.trim() : '')).filter(Boolean) : [];
+        if (title || items.length > 0) normalizedGroups.push({ title, items });
     }
+
+    // If still empty, remove the whole section so no blank space remains
+    if (normalizedGroups.length === 0 || normalizedGroups.every(g => g.items.length === 0)) {
+        skillsSection.remove();
+        return;
+    }
+
+    // Render groups
+    skillsSection.innerHTML = normalizedGroups.map((group) => {
+        const groupTitle = group.title || 'Skills';
+        const tagsHtml = (group.items || []).map(skill => `<span class="skill-tag">${skill}</span>`).join('');
+        return `
+            <div class="skills-group">
+                <h3>${groupTitle}</h3>
+                <div class="skills-tags">${tagsHtml}</div>
+            </div>
+        `;
+    }).join('');
 }
 
 // Populate Resume Section
