@@ -139,7 +139,8 @@ const resumeData = {
         orcid: "https://orcid.org/0009-0004-2306-5648",
         googlescholar: "https://scholar.google.com/citations?hl=en&user=x7wJsMIAAAAJ",
         youtube: "https://www.youtube.com/channel/UCxUIZvEJhnBcLBk61QT1azQ#",
-        sciprofiles: "https://sciprofiles.com/profile/SalmaGhafouriVarzaneh"
+        sciprofiles: "https://sciprofiles.com/profile/SalmaGhafouriVarzaneh",
+        occtestbed: "https://www.occtestbed.com/our-team"
     },
 
     // Quote Section
