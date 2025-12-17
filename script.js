@@ -24,18 +24,23 @@ document.querySelectorAll('.nav-link').forEach(link => {
     });
 });
 
-// Smooth scroll for navigation links (only for hash links, not download links)
+// Smooth scroll for in-page hash links (only when a real target id is provided)
 document.querySelectorAll('a[href^="#"]:not([download])').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href') || '';
+
+        // Ignore empty/hash-only links like href="#"
+        if (href === '#' || href.length < 2) return;
+
+        const target = document.querySelector(href);
+        if (!target) return;
+
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            const offsetTop = target.offsetTop - 80;
-            window.scrollTo({
-                top: offsetTop,
-                behavior: 'smooth'
-            });
-        }
+        const offsetTop = target.offsetTop - 80;
+        window.scrollTo({
+            top: offsetTop,
+            behavior: 'smooth'
+        });
     });
 });
 
@@ -531,33 +536,5 @@ document.addEventListener('DOMContentLoaded', () => {
     //     sliderWrapper.addEventListener('mouseenter', stopAutoPlay);
     //     sliderWrapper.addEventListener('mouseleave', startAutoPlay);
     // }
-});
-
-// Social Links Event Listeners
-document.querySelectorAll('.social-link').forEach(link => {
-    link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const socialType = link.getAttribute('data-social');
-        const socialName = link.textContent.trim();
-        
-        // You can customize these URLs with your actual social media profiles
-        const socialUrls = {
-            'linkedin': 'https://www.linkedin.com/in/your-profile',
-            'github': 'https://github.com/your-username',
-            'instagram': 'https://www.instagram.com/your-username',
-            'researchgate': 'https://www.researchgate.net/profile/your-profile',
-            'orcid': 'https://orcid.org/0000-0000-0000-0000',
-            'googlescholar': 'https://scholar.google.com/citations?user=your-id',
-            'youtube': 'https://www.youtube.com/@your-channel',
-            'sciprofiles': 'https://sciprofiles.com/profile/SalmaGhafouriVarzaneh'
-        };
-        
-        const url = socialUrls[socialType];
-        if (url) {
-            window.open(url, '_blank', 'noopener,noreferrer');
-        } else {
-            alert(`${socialName} link will be added soon.`);
-        }
-    });
 });
 

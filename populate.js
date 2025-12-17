@@ -216,9 +216,28 @@ function populateContact() {
     const socialLinks = document.querySelectorAll('.social-link');
     socialLinks.forEach(link => {
         const socialType = link.getAttribute('data-social');
-        if (socialType && resumeData.socialLinks[socialType]) {
-            link.href = resumeData.socialLinks[socialType];
+        if (!socialType) return;
+
+        const rawHref = resumeData?.socialLinks?.[socialType];
+        const href = (typeof rawHref === 'string') ? rawHref.trim() : '';
+
+        // If it's not set (or left as "#"), keep it inert and show a helpful message
+        if (!href || href === '#') {
+            link.href = '#';
+            link.removeAttribute('target');
+            link.removeAttribute('rel');
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert(`Please set your ${socialType} URL in content.js (resumeData.socialLinks.${socialType}).`);
+            });
+            return;
         }
+
+        // If user forgot the protocol, assume https://
+        const normalizedHref = /^https?:\/\//i.test(href) ? href : `https://${href}`;
+        link.href = normalizedHref;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
     });
 }
 

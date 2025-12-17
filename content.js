@@ -126,20 +126,20 @@ const resumeData = {
 
     // Contact Information
     contact: {
-        email: "salmaghafouri98@gmail.com",
+        email: "ghafourivas@vcu.edu",
         location: "United States of America"
     },
 
     // Social Media Links
     socialLinks: {
-        linkedin: "#",
+        linkedin: "https://www.linkedin.com/in/salma-ghafouri-varzaneh/",
         github: "https://github.com/Salma-Ghafouri",
-        instagram: "#",
-        researchgate: "#",
-        orcid: "#",
-        googlescholar: "#",
-        youtube: "#",
-        sciprofiles: "#"
+        instagram: "https://www.instagram.com/salma_ghafouri/",
+        researchgate: "https://www.researchgate.net/profile/Salma-Ghafouri-Varzaneh",
+        orcid: "https://orcid.org/0009-0004-2306-5648",
+        googlescholar: "https://scholar.google.com/citations?hl=en&user=x7wJsMIAAAAJ",
+        youtube: "https://www.youtube.com/channel/UCxUIZvEJhnBcLBk61QT1azQ#",
+        sciprofiles: "https://sciprofiles.com/profile/SalmaGhafouriVarzaneh"
     },
 
     // Quote Section
