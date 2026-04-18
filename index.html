@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salma Ghafouri</title>
+    <title>Salma Ghafouri-Varzaneh</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,7 +33,9 @@
         <div class="hero-content">
             <div class="hero-text">
                 <h1 class="hero-title"><!-- Populated by populate.js --></h1>
-                <p class="hero-subtitle"><!-- Populated by populate.js --></p>
+                <p class="hero-subtitle1"><!-- Populated by populate.js --></p>
+                <p class="hero-subtitle2"><!-- Populated by populate.js --></p>
+                <p class="hero-subtitle3"><!-- Populated by populate.js --></p>
                 <div class="hero-buttons">
                     <a href="#" class="btn btn-primary"><!-- Populated by populate.js --></a>
                     <a href="#" class="btn btn-secondary"><!-- Populated by populate.js --></a>
@@ -81,7 +83,13 @@
                         </div>
                     </div>
                     <div class="resume-section">
-                        <h3 class="resume-section-title">Research & Publications</h3>
+                        <h3 class="resume-section-title">Publications</h3>
+                        <div class="timeline">
+                            <!-- Populated by populate.js -->
+                        </div>
+                    </div>
+                    <div class="resume-section">
+                        <h3 class="resume-section-title">Research & academic activity</h3>
                         <div class="timeline">
                             <!-- Populated by populate.js -->
                         </div>
@@ -95,7 +103,26 @@
                 </div>
                 <div class="resume-column">
                     <div class="resume-section">
+                        <h3 class="resume-section-title">Posters & presentations</h3>
+                        <div class="certificates">
+                            <!-- Populated by populate.js -->
+                        </div>
+                    </div>
+                    <div class="resume-section">
+                        <h3 class="resume-section-title">Patents</h3>
+                        <div class="certificates">
+                            <!-- Populated by populate.js -->
+                        </div>
+                    </div>
+                    <!-- Key Projects resume section temporarily disabled
+                    <div class="resume-section">
                         <h3 class="resume-section-title">Key Projects</h3>
+                        <div class="certificates">
+                        </div>
+                    </div>
+                    -->
+                    <div class="resume-section">
+                        <h3 class="resume-section-title">Honors & Awards</h3>
                         <div class="certificates">
                             <!-- Populated by populate.js -->
                         </div>
@@ -108,9 +135,6 @@
                     </div>
                 </div>
             </div>
-            <div class="download-resume">
-                <a href="#" class="btn btn-primary">Download Resume PDF</a>
-            </div>
         </div>
     </section>
 
@@ -122,12 +146,14 @@
                 <button class="gallery-filter-btn active" type="button" data-gallery-category="general" role="tab" aria-selected="true">
                     Gallery
                 </button>
+                <!-- Certificates / Projects gallery tabs temporarily disabled
                 <button class="gallery-filter-btn" type="button" data-gallery-category="certificates" role="tab" aria-selected="false">
                     Certificates
                 </button>
                 <button class="gallery-filter-btn" type="button" data-gallery-category="projects" role="tab" aria-selected="false">
                     Projects
                 </button>
+                -->
             </div>
             <div class="gallery-slider-container">
                 <div class="gallery-slider-wrapper">
@@ -135,7 +161,7 @@
                     <div class="gallery-slider" id="gallerySlider">
                         <!-- Images will be loaded dynamically by JavaScript -->
                         <div class="gallery-empty-message">
-                            <p>No images found. Please add images to <code>assets/gallery/</code>, <code>assets/certificates/</code>, or <code>assets/projects/</code>.</p>
+                            <p>No images found. Please add images to <code>assets/gallery/</code>.</p>
                         </div>
                     </div>
                     <button class="slider-btn slider-btn-next" aria-label="Next image">›</button>
@@ -246,7 +272,7 @@
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <p>Designed by <a href="https://alixahedi.github.io/" target="_blank" rel="noopener noreferrer">Ali Zahedi</a></p>
+                <p>Designed by <a href="https://alixahedi.github.io/" target="_blank" rel="noopener noreferrer">Ali Zahedi</a> & <a href="https://salma-ghafouri.github.io/" target="_blank" rel="noopener noreferrer">Salma Ghafouri-Varzaneh</a></p>
                 <div class="footer-location">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -257,6 +283,20 @@
             </div>
         </div>
     </footer>
+
+    <!-- Expandable list modal (Education, Resume lists, Skills with 4+ items) -->
+    <div id="contentExpandModal" class="content-expand-modal" role="dialog" aria-modal="true" aria-labelledby="contentExpandModalTitle" hidden>
+        <div class="content-expand-modal__backdrop" data-close-expand-modal tabindex="-1"></div>
+        <div class="content-expand-modal__panel">
+            <button type="button" class="content-expand-modal__close" data-close-expand-modal aria-label="Close dialog">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" aria-hidden="true">
+                    <path d="M18 6L6 18M6 6l12 12"></path>
+                </svg>
+            </button>
+            <h2 id="contentExpandModalTitle" class="content-expand-modal__title"></h2>
+            <div class="content-expand-modal__body"></div>
+        </div>
+    </div>
 
     <!-- Scroll to Top Button -->
     <button id="scrollToTop" class="scroll-to-top" aria-label="Scroll to top">

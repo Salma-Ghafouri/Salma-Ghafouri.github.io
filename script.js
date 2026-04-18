@@ -162,8 +162,7 @@ if (scrollToTopBtn) {
 // Gallery categories (folders are separated so users can choose what to view)
 // Put images under:
 // - assets/gallery/
-// - assets/certificates/
-// - assets/projects/
+// - (optional) assets/certificates/, assets/projects/ — gallery tabs for those are temporarily disabled
 //
 // Optional: you can provide manual lists per category (filenames only). If empty, auto-detect is used.
 const galleryCategories = {
@@ -173,7 +172,9 @@ const galleryCategories = {
         images: [],
         autoDetect: true,
         maxAutoDetect: 20
-    },
+    }
+    /* Certificates / Projects gallery categories temporarily disabled
+    ,
     certificates: {
         label: 'Certificates',
         folder: 'assets/certificates/',
@@ -188,6 +189,7 @@ const galleryCategories = {
         autoDetect: true,
         maxAutoDetect: 20
     }
+    */
 };
 
 // Gallery Slider Functionality
@@ -282,7 +284,7 @@ async function loadImagesFromFolder(folder, categoryConfig) {
 
     // Auto-detect images (image1.jpg, image2.png, ...)
     if (shouldAutoDetect) {
-        const extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        const extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
         for (let i = 1; i <= maxDetect; i++) {
             for (const ext of extensions) {
                 const imagePath = `${folder}image${i}.${ext}`;

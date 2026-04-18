@@ -3,8 +3,187 @@
 // ============================================
 // This file reads data from content.js and populates the HTML
 
+/** Max items shown inline before "View all" opens the scrollable modal */
+const RESUME_LIST_INLINE_MAX = 3;
+
+const expandListRegistry = Object.create(null);
+let expandListSeq = 0;
+
+function registerExpandListHtml(html) {
+    const id = `expand-${++expandListSeq}`;
+    expandListRegistry[id] = html;
+    return id;
+}
+
+function escapeHtmlAttr(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;');
+}
+
+function renderEducationItem(item) {
+    return `
+                    <div class="timeline-item">
+                        <div class="timeline-date">${item.date}</div>
+                        <div class="timeline-content">
+                            <h4>${item.degree}</h4>
+                            <p class="company">${item.institution}</p>
+                            <p>${item.description}</p>
+                        </div>
+                    </div>`;
+}
+
+function renderResearchItem(item) {
+    return `
+                    <div class="timeline-item">
+                        <div class="timeline-date">${item.date}</div>
+                        <div class="timeline-content">
+                            <h4>${item.title}</h4>
+                            <p class="company">${item.organization}</p>
+                            <p>${item.description}</p>
+                        </div>
+                    </div>`;
+}
+
+function renderWorkItem(item) {
+    return `
+                    <div class="timeline-item">
+                        <div class="timeline-date">${item.date}</div>
+                        <div class="timeline-content">
+                            <h4>${item.title}</h4>
+                            <p class="company">${item.company}</p>
+                            <p>${item.description}</p>
+                        </div>
+                    </div>`;
+}
+
+function renderProjectItem(project) {
+    return `
+                    <div class="certificate-item">
+                        <h4>${project.title}</h4>
+                        <p>${project.description}</p>
+                    </div>`;
+}
+
+function renderExpertiseItem(item) {
+    return `
+                    <div class="certificate-item">
+                        <h4>${item.title}</h4>
+                        <p>${item.description}</p>
+                    </div>`;
+}
+
+/** Posters / patents: same data shape as timeline rows, shown as right-column cards */
+function renderPosterPatentCard(item) {
+    return `
+                    <div class="certificate-item certificate-item--resume-extra">
+                        <h4>${item.title}</h4>
+                        <p class="certificate-item__meta">${item.date} · ${item.organization}</p>
+                        <p>${item.description}</p>
+                    </div>`;
+}
+
+function mountExpandableTimeline(container, items, sectionTitle, renderItem) {
+    if (!container || !Array.isArray(items) || items.length === 0) return;
+    const fullHtml = items.map(renderItem).join('');
+    if (items.length <= RESUME_LIST_INLINE_MAX) {
+        container.innerHTML = fullHtml;
+        return;
+    }
+    const previewHtml = items.slice(0, RESUME_LIST_INLINE_MAX).map(renderItem).join('');
+    const regId = registerExpandListHtml(
+        `<div class="timeline content-modal-inner-list">${fullHtml}</div>`
+    );
+    container.innerHTML = `${previewHtml}
+                    <div class="list-expand-action">
+                        <button type="button" class="btn btn-secondary btn-expand-list" data-expand-id="${regId}" data-modal-title="${escapeHtmlAttr(sectionTitle)}" aria-haspopup="dialog">
+                            View all (${items.length})
+                        </button>
+                    </div>`;
+}
+
+function mountExpandableCertificates(container, items, sectionTitle, renderItem) {
+    if (!container || !Array.isArray(items) || items.length === 0) return;
+    const fullHtml = items.map(renderItem).join('');
+    if (items.length <= RESUME_LIST_INLINE_MAX) {
+        container.innerHTML = fullHtml;
+        return;
+    }
+    const previewHtml = items.slice(0, RESUME_LIST_INLINE_MAX).map(renderItem).join('');
+    const regId = registerExpandListHtml(
+        `<div class="certificates content-modal-inner-list">${fullHtml}</div>`
+    );
+    container.innerHTML = `${previewHtml}
+                    <div class="list-expand-action">
+                        <button type="button" class="btn btn-secondary btn-expand-list" data-expand-id="${regId}" data-modal-title="${escapeHtmlAttr(sectionTitle)}" aria-haspopup="dialog">
+                            View all (${items.length})
+                        </button>
+                    </div>`;
+}
+
+function initResumeExpandModal() {
+    const modal = document.getElementById('contentExpandModal');
+    if (!modal) return;
+
+    const titleEl = modal.querySelector('.content-expand-modal__title');
+    const bodyEl = modal.querySelector('.content-expand-modal__body');
+    const closeTriggers = modal.querySelectorAll('[data-close-expand-modal]');
+
+    let lastFocus = null;
+
+    function openModal(title, html) {
+        lastFocus = document.activeElement;
+        if (titleEl) titleEl.textContent = title;
+        if (bodyEl) bodyEl.innerHTML = html;
+        modal.removeAttribute('hidden');
+        requestAnimationFrame(() => {
+            modal.classList.add('is-open');
+            document.body.classList.add('resume-modal-open');
+        });
+        const closeBtn = modal.querySelector('.content-expand-modal__close');
+        if (closeBtn) closeBtn.focus();
+    }
+
+    function closeModal() {
+        modal.classList.remove('is-open');
+        document.body.classList.remove('resume-modal-open');
+        if (bodyEl) bodyEl.innerHTML = '';
+        modal.setAttribute('hidden', '');
+        if (lastFocus && typeof lastFocus.focus === 'function') {
+            lastFocus.focus();
+        }
+        lastFocus = null;
+    }
+
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-expand-list');
+        if (btn) {
+            e.preventDefault();
+            const id = btn.getAttribute('data-expand-id');
+            const title = btn.getAttribute('data-modal-title') || 'Details';
+            const html = id ? expandListRegistry[id] : '';
+            if (html) openModal(title, html);
+            return;
+        }
+
+        if (!modal.classList.contains('is-open')) return;
+
+        if (e.target.closest('[data-close-expand-modal]')) {
+            e.preventDefault();
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (!modal.classList.contains('is-open')) return;
+        closeModal();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Wait for content.js to load
     if (typeof resumeData === 'undefined') {
         console.error('resumeData is not defined. Make sure content.js is loaded before populate.js');
         return;
@@ -17,12 +196,14 @@ document.addEventListener('DOMContentLoaded', () => {
     populateContact();
     populateQuote();
     populateFooter();
+    initResumeExpandModal();
 });
 
-// Populate Hero Section
 function populateHero() {
     const heroTitle = document.querySelector('.hero-title');
-    const heroSubtitle = document.querySelector('.hero-subtitle');
+    const heroSubtitle1 = document.querySelector('.hero-subtitle1');
+    const heroSubtitle2 = document.querySelector('.hero-subtitle2');
+    const heroSubtitle3 = document.querySelector('.hero-subtitle3');
     const heroAvatar = document.querySelector('.hero-avatar');
     const primaryBtn = document.querySelector('.btn-primary');
     const secondaryBtn = document.querySelector('.btn-secondary');
@@ -31,8 +212,16 @@ function populateHero() {
         heroTitle.innerHTML = `Hello! I'm <span class="highlight">${resumeData.personal.name}</span>`;
     }
 
-    if (heroSubtitle && resumeData.personal.title) {
-        heroSubtitle.textContent = resumeData.personal.title;
+    if (heroSubtitle1 && resumeData.personal.title1) {
+        heroSubtitle1.textContent = resumeData.personal.title1;
+    }
+
+    if (heroSubtitle2 && resumeData.personal.title2) {
+        heroSubtitle2.textContent = resumeData.personal.title2;
+    }
+
+    if (heroSubtitle3 && resumeData.personal.title3) {
+        heroSubtitle3.textContent = resumeData.personal.title3;
     }
 
     if (heroAvatar && resumeData.personal.avatar) {
@@ -51,198 +240,232 @@ function populateHero() {
     }
 }
 
-// Populate Bio Section
 function populateBio() {
     const bioText = document.querySelector('.bio-text');
-    
+
     if (bioText && resumeData.bio && resumeData.bio.paragraphs) {
         const paragraphsHTML = resumeData.bio.paragraphs
             .map(text => `<p>${text}</p>`)
             .join('');
-        
-        // Find skills section and preserve it
+
         const skillsSection = bioText.querySelector('.skills');
         const skillsHTML = skillsSection ? skillsSection.outerHTML : '';
-        
+
         bioText.innerHTML = paragraphsHTML + skillsHTML;
     }
 }
 
-// Populate Skills Section
-function populateSkills() {
-    const skillsSection = document.querySelector('.skills');
-    if (!skillsSection) return;
-
-    // New flexible format:
-    // resumeData.skillsGroups = [{ title: "Technical Skills", items: ["Python", ...] }, ...]
-    // Backward compatible with:
-    // resumeData.skills = { title: "Technical Skills", items: [...] }
-    const rawGroups = Array.isArray(resumeData?.skillsGroups) ? resumeData.skillsGroups : [];
-    const legacy = resumeData?.skills;
-
+function normalizeSkillGroups(rawGroups, legacy) {
     const normalizedGroups = [];
-
     for (const g of rawGroups) {
         const title = (typeof g?.title === 'string') ? g.title.trim() : '';
         const items = Array.isArray(g?.items) ? g.items.map(s => (typeof s === 'string' ? s.trim() : '')).filter(Boolean) : [];
         if (title || items.length > 0) normalizedGroups.push({ title, items });
     }
-
-    // If no groups provided, fall back to legacy `skills`
     if (normalizedGroups.length === 0 && legacy) {
         const title = (typeof legacy?.title === 'string') ? legacy.title.trim() : '';
         const items = Array.isArray(legacy?.items) ? legacy.items.map(s => (typeof s === 'string' ? s.trim() : '')).filter(Boolean) : [];
         if (title || items.length > 0) normalizedGroups.push({ title, items });
     }
+    return normalizedGroups;
+}
 
-    // If still empty, remove the whole section so no blank space remains
-    if (normalizedGroups.length === 0 || normalizedGroups.every(g => g.items.length === 0)) {
+function buildSkillsCategoriesModalHtml(groups) {
+    return groups.map((group) => {
+        const groupTitle = group.title || 'Skills';
+        const items = group.items || [];
+        if (items.length === 0) return '';
+        const tags = items.map((skill) => `<span class="skill-tag">${skill}</span>`).join('');
+        return `
+            <div class="skills-group skills-group--modal-block">
+                <h3 class="skills-modal-category-title">${groupTitle}</h3>
+                <div class="skills-tags skills-tags--modal">${tags}</div>
+            </div>`;
+    }).filter(Boolean).join('');
+}
+
+function populateSkills() {
+    const skillsSection = document.querySelector('.skills');
+    if (!skillsSection) return;
+
+    const rawGroups = Array.isArray(resumeData?.skillsGroups) ? resumeData.skillsGroups : [];
+    const legacy = resumeData?.skills;
+    const normalizedGroups = normalizeSkillGroups(rawGroups, legacy);
+
+    const featuredRaw = resumeData?.skillsFeatured;
+    let featuredItems = [];
+    let featuredTitle = 'Core skills';
+    if (Array.isArray(featuredRaw)) {
+        featuredItems = featuredRaw.map(s => (typeof s === 'string' ? s.trim() : '')).filter(Boolean);
+    } else if (featuredRaw && Array.isArray(featuredRaw.items)) {
+        featuredItems = featuredRaw.items.map(s => (typeof s === 'string' ? s.trim() : '')).filter(Boolean);
+        if (typeof featuredRaw.title === 'string' && featuredRaw.title.trim()) {
+            featuredTitle = featuredRaw.title.trim();
+        }
+    }
+
+    const hasGroups = normalizedGroups.length > 0 && !normalizedGroups.every(g => (g.items || []).length === 0);
+    const hasFeatured = featuredItems.length > 0;
+
+    if (!hasGroups && !hasFeatured) {
         skillsSection.remove();
         return;
     }
 
-    // Render groups
+    const tag = (skill) => `<span class="skill-tag">${skill}</span>`;
+
+    // Featured row + all categories only inside "View all"
+    if (hasFeatured && hasGroups) {
+        const modalInner = buildSkillsCategoriesModalHtml(normalizedGroups);
+        const regId = registerExpandListHtml(`<div class="skills-modal-all">${modalInner}</div>`);
+        const expandBlock = `
+                <div class="list-expand-action list-expand-action--skills">
+                    <button type="button" class="btn btn-secondary btn-expand-list" data-expand-id="${regId}" data-modal-title="${escapeHtmlAttr('All skill categories')}" aria-haspopup="dialog">
+                        View all skills
+                    </button>
+                </div>`;
+        skillsSection.innerHTML = `
+            <div class="skills-group skills-group--featured">
+                <h3>${featuredTitle}</h3>
+                <div class="skills-tags">${featuredItems.map(tag).join('')}</div>${expandBlock}
+            </div>`;
+        return;
+    }
+
+    if (hasFeatured && !hasGroups) {
+        skillsSection.innerHTML = `
+            <div class="skills-group skills-group--featured">
+                <h3>${featuredTitle}</h3>
+                <div class="skills-tags">${featuredItems.map(tag).join('')}</div>
+            </div>`;
+        return;
+    }
+
+    // No featured list: keep previous behavior (each group inline, per-group View all when needed)
+    if (!hasGroups) {
+        skillsSection.remove();
+        return;
+    }
+
     skillsSection.innerHTML = normalizedGroups.map((group) => {
         const groupTitle = group.title || 'Skills';
-        const tagsHtml = (group.items || []).map(skill => `<span class="skill-tag">${skill}</span>`).join('');
+        const items = group.items || [];
+        if (items.length === 0) return '';
+
+        if (items.length <= RESUME_LIST_INLINE_MAX) {
+            return `
+            <div class="skills-group">
+                <h3>${groupTitle}</h3>
+                <div class="skills-tags">${items.map(tag).join('')}</div>
+            </div>`;
+        }
+
+        const visible = items.slice(0, RESUME_LIST_INLINE_MAX).map(tag).join('');
+        const allTags = items.map(tag).join('');
+        const regId = registerExpandListHtml(`<div class="skills-tags skills-tags--modal">${allTags}</div>`);
+        const modalTitle = `${groupTitle} (all items)`;
+
         return `
             <div class="skills-group">
                 <h3>${groupTitle}</h3>
-                <div class="skills-tags">${tagsHtml}</div>
-            </div>
-        `;
-    }).join('');
+                <div class="skills-tags">${visible}</div>
+                <div class="list-expand-action list-expand-action--skills">
+                    <button type="button" class="btn btn-secondary btn-expand-list" data-expand-id="${regId}" data-modal-title="${escapeHtmlAttr(modalTitle)}" aria-haspopup="dialog">
+                        View all (${items.length})
+                    </button>
+                </div>
+            </div>`;
+    }).filter(Boolean).join('');
 }
 
-// Populate Resume Section
 function populateResume() {
-    // Find sections by their titles
     const resumeSections = document.querySelectorAll('.resume-section');
-    
+
     resumeSections.forEach(section => {
         const title = section.querySelector('.resume-section-title');
         if (!title) return;
-        
+
         const titleText = title.textContent.trim();
-        
-        // Education
+
         if (titleText === 'Education') {
             const timeline = section.querySelector('.timeline');
             if (timeline && resumeData.education) {
-                timeline.innerHTML = resumeData.education.map(item => `
-                    <div class="timeline-item">
-                        <div class="timeline-date">${item.date}</div>
-                        <div class="timeline-content">
-                            <h4>${item.degree}</h4>
-                            <p class="company">${item.institution}</p>
-                            <p>${item.description}</p>
-                        </div>
-                    </div>
-                `).join('');
+                mountExpandableTimeline(timeline, resumeData.education, titleText, renderEducationItem);
             }
         }
-        
-        // Research & Publications
-        if (titleText === 'Research & Publications') {
+
+        if (titleText === 'Publications') {
             const timeline = section.querySelector('.timeline');
-            if (timeline && resumeData.research) {
-                timeline.innerHTML = resumeData.research.map(item => `
-                    <div class="timeline-item">
-                        <div class="timeline-date">${item.date}</div>
-                        <div class="timeline-content">
-                            <h4>${item.title}</h4>
-                            <p class="company">${item.organization}</p>
-                            <p>${item.description}</p>
-                        </div>
-                    </div>
-                `).join('');
+            const items = resumeData.publications || resumeData.research;
+            if (timeline && items) {
+                mountExpandableTimeline(timeline, items, titleText, renderResearchItem);
             }
         }
-        
-        // Work Experience
+
+        if (titleText === 'Posters & presentations') {
+            const certificates = section.querySelector('.certificates');
+            if (certificates && resumeData.posterPresentations) {
+                mountExpandableCertificates(certificates, resumeData.posterPresentations, titleText, renderPosterPatentCard);
+            }
+        }
+
+        if (titleText === 'Patents') {
+            const certificates = section.querySelector('.certificates');
+            if (certificates && resumeData.patents) {
+                mountExpandableCertificates(certificates, resumeData.patents, titleText, renderPosterPatentCard);
+            }
+        }
+
+        if (titleText === 'Research & academic activity') {
+            const timeline = section.querySelector('.timeline');
+            if (timeline && resumeData.researchActivity) {
+                mountExpandableTimeline(timeline, resumeData.researchActivity, titleText, renderResearchItem);
+            }
+        }
+
         if (titleText === 'Work Experience') {
             const timeline = section.querySelector('.timeline');
             if (timeline && resumeData.workExperience) {
-                timeline.innerHTML = resumeData.workExperience.map(item => `
-                    <div class="timeline-item">
-                        <div class="timeline-date">${item.date}</div>
-                        <div class="timeline-content">
-                            <h4>${item.title}</h4>
-                            <p class="company">${item.company}</p>
-                            <p>${item.description}</p>
-                        </div>
-                    </div>
-                `).join('');
+                mountExpandableTimeline(timeline, resumeData.workExperience, titleText, renderWorkItem);
             }
         }
-        
-        // Key Projects
-        if (titleText === 'Key Projects') {
+
+        // Key Projects section temporarily disabled (see index.html)
+        // if (titleText === 'Key Projects') {
+        //     const certificates = section.querySelector('.certificates');
+        //     if (certificates && resumeData.projects) {
+        //         mountExpandableCertificates(certificates, resumeData.projects, titleText, renderProjectItem);
+        //     }
+        // }
+
+        if (titleText === 'Honors & Awards') {
             const certificates = section.querySelector('.certificates');
-            if (certificates && resumeData.projects) {
-                certificates.innerHTML = resumeData.projects.map(project => `
-                    <div class="certificate-item">
-                        <h4>${project.title}</h4>
-                        <p>${project.description}</p>
-                    </div>
-                `).join('');
+            if (certificates && resumeData.honors) {
+                mountExpandableCertificates(certificates, resumeData.honors, titleText, renderExpertiseItem);
             }
         }
-        
-        // Areas of Expertise
+
         if (titleText === 'Areas of Expertise') {
             const certificates = section.querySelector('.certificates');
             if (certificates && resumeData.expertise) {
-                certificates.innerHTML = resumeData.expertise.map(item => `
-                    <div class="certificate-item">
-                        <h4>${item.title}</h4>
-                        <p>${item.description}</p>
-                    </div>
-                `).join('');
+                mountExpandableCertificates(certificates, resumeData.expertise, titleText, renderExpertiseItem);
             }
         }
     });
-
-    // Resume PDF Link - simple & reliable (no fetch/blob; avoids wrong/cached downloads)
-    const resumePDFLink = document.querySelector('.download-resume a');
-    if (resumePDFLink) {
-        const pdfPath = resumeData?.resumePDF;
-        const fileName = resumeData?.resumePDFFileName || 'resume.pdf';
-        const version = resumeData?.resumePDFVersion || Date.now(); // cache-bust by default
-
-        if (pdfPath && pdfPath !== '#') {
-            // Use a cache-busting query param so the browser fetches the latest file.
-            // Keep the real file path intact for GitHub Pages / Live Server.
-            const separator = pdfPath.includes('?') ? '&' : '?';
-            resumePDFLink.href = `${pdfPath}${separator}v=${encodeURIComponent(version)}`;
-            resumePDFLink.setAttribute('download', fileName);
-            resumePDFLink.removeAttribute('target');
-        } else {
-            resumePDFLink.href = '#';
-            resumePDFLink.removeAttribute('download');
-            resumePDFLink.addEventListener('click', function (e) {
-                e.preventDefault();
-                alert('Resume PDF link is not set. Please update content.js file.');
-            });
-        }
-    }
 }
 
-// Populate Contact Section
 function populateContact() {
-    // Email
     const emailCard = document.querySelector('.contact-card-link');
     const emailText = document.querySelector('.contact-email');
-    
+
     if (emailCard && resumeData.contact.email) {
         emailCard.href = `mailto:${resumeData.contact.email}`;
     }
-    
+
     if (emailText && resumeData.contact.email) {
         emailText.textContent = resumeData.contact.email;
     }
 
-    // Social Links
     const socialLinks = document.querySelectorAll('.social-link');
     socialLinks.forEach(link => {
         const socialType = link.getAttribute('data-social');
@@ -251,7 +474,6 @@ function populateContact() {
         const rawHref = resumeData?.socialLinks?.[socialType];
         const href = (typeof rawHref === 'string') ? rawHref.trim() : '';
 
-        // If it's not set (or left as "#"), keep it inert and show a helpful message
         if (!href || href === '#') {
             link.href = '#';
             link.removeAttribute('target');
@@ -263,7 +485,6 @@ function populateContact() {
             return;
         }
 
-        // If user forgot the protocol, assume https://
         const normalizedHref = /^https?:\/\//i.test(href) ? href : `https://${href}`;
         link.href = normalizedHref;
         link.target = '_blank';
@@ -271,21 +492,18 @@ function populateContact() {
     });
 }
 
-// Populate Quote Section
 function populateQuote() {
     const quoteText = document.querySelector('.quote');
-    
+
     if (quoteText && resumeData.quote) {
         quoteText.innerHTML = `"${resumeData.quote.text}"<cite>${resumeData.quote.author}</cite>`;
     }
 }
 
-// Populate Footer
 function populateFooter() {
     const footerLocation = document.querySelector('.footer-location span');
-    
+
     if (footerLocation && resumeData.contact.location) {
         footerLocation.textContent = resumeData.contact.location;
     }
 }
-
